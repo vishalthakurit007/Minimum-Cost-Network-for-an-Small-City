@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kruskal's Algorithm - MST</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 50%;
+        }
+        table, th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+        input {
+            margin: 5px;
+            padding: 5px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Minimum Cost Road Network (Kruskal's Algorithm)</h2>
+
+    <label>Number of Locations (Nodes):</label>
+    <input type="number" id="nodes" min="1" value="4"><br>
+
+    <h3>Enter Roads (Edges):</h3>
+    <p>Format: Location1, Location2, Cost (e.g., 0,1,10)</p>
+    <textarea id="edgesInput" rows="5" cols="30">0,1,10
+0,2,6
+0,3,5
+1,3,15
+2,3,4</textarea><br>
+
+    <button onclick="findMST()">Find Minimum Spanning Tree</button>
+
+    <h3>Minimum Spanning Tree</h3>
+    <table id="resultTable">
+        <tr>
+            <th>From</th>
+            <th>To</th>
+            <th>Cost</th>
+        </tr>
+    </table>
+    <h3 id="totalCost"></h3>
+
+    <script>
+        class Edge {
+            constructor(src, dest, weight) {
+                this.src = src;
+                this.dest = dest;
+                this.weight = weight;
+            }
+        }
+
+        class Subset {
+            constructor(parent, rank) {
+                this.parent = parent;
+                this.rank = rank;
+            }
+        }
+
+        function find(subsets, i) {
+            if (subsets[i].parent !== i)
+                subsets[i].parent = find(subsets, subsets[i].parent);
+            return subsets[i].parent;
+        }
+
+        function union(subsets, x, y) {
+            let rootX = find(subsets, x);
+            let rootY = find(subsets, y);
+
+            if (subsets[rootX].rank < subsets[rootY].rank)
+                subsets[rootX].parent = rootY;
+            else if (subsets[rootX].rank > subsets[rootY].rank)
+                subsets[rootY].parent = rootX;
+            else {
+                subsets[rootY].parent = rootX;
+                subsets[rootX].rank++;
+            }
+        }
+
+        function kruskalMST(V, edges) {
+            edges.sort((a, b) => a.weight - b.weight);
+            let subsets = [];
+            for (let v = 0; v < V; v++)
+                subsets[v] = new Subset(v, 0);
+
+            let mst = [];
+            let e = 0, i = 0;
+            while (e < V - 1 && i < edges.length) {
+                let nextEdge = edges[i++];
+                let x = find(subsets, nextEdge.src);
+                let y = find(subsets, nextEdge.dest);
+
+                if (x !== y) {
+                    mst.push(nextEdge);
+                    union(subsets, x, y);
+                    e++;
+                }
+            }
+            return mst;
+        }
+
+        function findMST() {
+            let V = parseInt(document.getElementById("nodes").value);
+            let edgesInput = document.getElementById("edgesInput").value.trim().split("\n");
+            let edges = [];
+
+            edgesInput.forEach(line => {
+                let parts = line.split(",");
+                if (parts.length === 3) {
+                    edges.push(new Edge(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2])));
+                }
+            });
+
+            let mst = kruskalMST(V, edges);
+            let totalCost = 0;
+            let table = document.getElementById("resultTable");
+
+            // Clear previous results
+            table.innerHTML = "<tr><th>From</th><th>To</th><th>Cost</th></tr>";
+
+            mst.forEach(edge => {
+                let row = table.insertRow();
+                row.insertCell(0).innerText = edge.src;
+                row.insertCell(1).innerText = edge.dest;
+                row.insertCell(2).innerText = edge.weight;
+                totalCost += edge.weight;
+            });
+
+            document.getElementById("totalCost").innerText = "Total Minimum Cost: " + totalCost;
+        }
+    </script>
+
+</body>
+</html>
+
